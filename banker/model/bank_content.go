@@ -4,6 +4,7 @@ type BankContent struct {
 	Date    string
 	Notes   string
 	Branch  string
-	Amount  string
-	Balance string
+	Amount  int
+	Factor  int
+	Balance int
 }

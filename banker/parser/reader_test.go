@@ -1,11 +1,62 @@
 package parser_test
 
-import "testing"
+import (
+	"path/filepath"
+	"testing"
 
-func TestMain(t *testing.T) {
+	"github.com/elanq/daily_tools/banker/parser"
+	"github.com/stretchr/testify/assert"
+)
 
+func TestNewBankReader(t *testing.T) {
+	reader := parser.NewBankReader()
+	assert.NotNil(t, reader, "Should not return nil")
 }
 
 func TestReadFile(t *testing.T) {
+	reader := parser.NewBankReader()
+
+	correctDir, err := filepath.Abs("../test/test_files/bank_sample.csv")
+	assert.Nil(t, err, "Should not return any error")
+	err = reader.ReadFile(correctDir)
+	assert.Nil(t, err, "Should not return any error")
+
+	wrongDir, wrongErr := filepath.Abs("../test/test_files/bank_sample.go")
+	assert.Nil(t, wrongErr, "Should not return any error")
+	wrongErr = reader.ReadFile(wrongDir)
+	assert.Error(t, wrongErr, "Should error because not existent file")
+}
+
+func TestParseContent(t *testing.T) {
+	reader := parser.NewBankReader()
+	invalidReader := parser.NewBankReader()
+
+	correctDir, err := filepath.Abs("../test/test_files/bank_sample.csv")
+	assert.Nil(t, err, "Should not return any error")
+	err = reader.ReadFile(correctDir)
+	assert.Nil(t, err, "Should not return any error")
+
+	invalidDir, invalidErr := filepath.Abs("../test/test_files/invalid_bank_sample.csv")
+	assert.Nil(t, invalidErr, "Should not return any error")
+	invalidErr = invalidReader.ReadFile(invalidDir)
+	assert.Nil(t, invalidErr, "Should not return any error")
+
+	records, err := reader.ParseContent()
+	assert.Nil(t, err, "Should not return any error")
+	for _, record := range records {
+		assert.NotNil(t, record.Date, "Should contains value")
+		assert.NotNil(t, record.Notes, "Should contains value")
+		assert.NotNil(t, record.Branch, "Should contains value")
+		assert.NotNil(t, record.Amount, "Should contains value")
+		assert.NotNil(t, record.Factor, "Should contains value")
+		assert.NotNil(t, record.Balance, "Should contains value")
+	}
+
+	_, invalidErr = invalidReader.ParseContent()
+	assert.Error(t, invalidErr, "Should return csv error")
+
+	invalidReader.RawContent = ""
+	_, invalidErr = invalidReader.ParseContent()
+	assert.Error(t, invalidErr, "Should return content error")
 
 }
