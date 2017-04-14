@@ -17,10 +17,12 @@ func TestReadFile(t *testing.T) {
 	reader := parser.NewBankReader()
 
 	correctDir, err := filepath.Abs("../test/test_files/bank_sample.csv")
+	assert.Nil(t, err, "Should not return any error")
 	err = reader.ReadFile(correctDir)
 	assert.Nil(t, err, "Should not return any error")
 
 	wrongDir, wrongErr := filepath.Abs("../test/test_files/bank_sample.go")
+	assert.Nil(t, wrongErr, "Should not return any error")
 	wrongErr = reader.ReadFile(wrongDir)
 	assert.Error(t, wrongErr, "Should error because not existent file")
 }
@@ -30,11 +32,14 @@ func TestParseContent(t *testing.T) {
 	invalidReader := parser.NewBankReader()
 
 	correctDir, err := filepath.Abs("../test/test_files/bank_sample.csv")
+	assert.Nil(t, err, "Should not return any error")
 	err = reader.ReadFile(correctDir)
 	assert.Nil(t, err, "Should not return any error")
 
 	invalidDir, invalidErr := filepath.Abs("../test/test_files/invalid_bank_sample.csv")
+	assert.Nil(t, invalidErr, "Should not return any error")
 	invalidErr = invalidReader.ReadFile(invalidDir)
+	assert.Nil(t, invalidErr, "Should not return any error")
 
 	records, err := reader.ParseContent()
 	assert.Nil(t, err, "Should not return any error")

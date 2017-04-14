@@ -24,12 +24,10 @@ func NewBankReader() *BankReader {
 	}
 }
 
-func (p *BankReader) sanitizeContent(raw []byte) string {
+func (p *BankReader) sanitizeContent(raw []byte) {
 	rawContent := string(raw)
 	re := regexp.MustCompile("(?m)[\r\n]+^.*Mata Uang.*|Nama.*|No. Rekening.*|Saldo Awal.*|Kredit.*|Debet.*|Saldo Akhir.*")
-	res := re.ReplaceAllString(rawContent, "")
-
-	return res
+	p.RawContent = re.ReplaceAllString(rawContent, "")
 }
 
 func (p *BankReader) getFactor(factor string) int {
@@ -48,7 +46,7 @@ func (p *BankReader) ReadFile(filepath string) error {
 		return err
 	}
 	p.Filepath = filepath
-	p.RawContent = p.sanitizeContent(raw)
+	p.sanitizeContent(raw)
 
 	return nil
 }
