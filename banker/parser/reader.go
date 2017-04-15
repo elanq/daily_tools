@@ -51,6 +51,10 @@ func (p *BankReader) ReadFile(filepath string) error {
 	return nil
 }
 
+func (p *BankReader) ReadBytes(bytes []byte) {
+	p.sanitizeContent(bytes)
+}
+
 func (p *BankReader) ParseContent() ([]*model.BankContent, error) {
 	var contents []*model.BankContent
 
