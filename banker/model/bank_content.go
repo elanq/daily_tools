@@ -1,10 +1,13 @@
 package model
 
+import "gopkg.in/mgo.v2/bson"
+
 type BankContent struct {
-	Date    string
-	Notes   string
-	Branch  string
-	Amount  int
-	Factor  int
-	Balance int
+	ID      bson.ObjectId `bson:"_id,omitempty"`
+	Date    string        `bson:"date"`
+	Notes   string        `bson:"notes"`
+	Branch  string        `bson:"branch"`
+	Amount  int           `bson:"amount"`
+	Factor  int           `bson:"factor"`
+	Balance int           `bson:"balance"`
 }
