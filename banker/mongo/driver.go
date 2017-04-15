@@ -3,6 +3,7 @@ package mongo
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"gopkg.in/mgo.v2"
 )
@@ -14,7 +15,7 @@ type MongoDriver struct {
 }
 
 func NewMongoDriver(dbName string, collectionName string) *MongoDriver {
-	session, err := mgo.Dial(os.Getenv("MONGODB_HOSTS"))
+	session, err := mgo.DialWithTimeout(os.Getenv("MONGODB_HOSTS"), 3*time.Second)
 	if err != nil {
 		panic(fmt.Sprintf("Error while connecting to DB"))
 	}

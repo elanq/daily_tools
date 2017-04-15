@@ -47,6 +47,13 @@ func (d *DriverSuite) TestNewMongoDriver() {
 	assert.NotNil(d.T(), d.Driver.Collection, "Collection should not be nil")
 }
 
+func TestInvalidMongoDriver(t *testing.T) {
+	os.Setenv("MONGODB_HOSTS", "127.0.0.1:12345")
+	assert.Panics(t, func() {
+		mongo.NewMongoDriver("derp", "durpp")
+	}, "should be panic")
+}
+
 func (d *DriverSuite) TestInsert() {
 	sampleContent := buildBankContent()
 	err := d.Driver.Insert(sampleContent)
@@ -70,6 +77,10 @@ func (d *DriverSuite) TestFindOne() {
 
 func (d *DriverSuite) TestFind() {
 	var results []model.BankContent
+	objId := bson.NewObjectId()
+	sampleContent := buildBankContent()
+	sampleContent.ID = objId
+	d.Driver.Insert(sampleContent)
 
 	err := d.Driver.Find(bson.M{}, &results)
 	assert.NotEmpty(d.T(), results, "should not empty")
