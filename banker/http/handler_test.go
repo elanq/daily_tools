@@ -25,6 +25,12 @@ type HttpSuite struct {
 	banker        *process.Banker
 }
 
+type TestData struct {
+	path         string
+	csvKey       string
+	expectedCode int
+}
+
 func TestHttpSuite(t *testing.T) {
 	suite.Run(t, new(HttpSuite))
 }
@@ -72,24 +78,42 @@ func (h *HttpSuite) prepareMultipartRequest(dir string, formKey string) *http.Re
 }
 
 func (h *HttpSuite) TestFileUpload() {
-	recorder := httptest.NewRecorder()
-	correctDir, err := filepath.Abs("../test/test_files/bank_sample.csv")
-	h.Assert().Nil(err, "Should not error")
+	var tests []*TestData
 
-	correctRequest := h.prepareMultipartRequest(correctDir, h.bankerHandler.CSVKey)
+	correctTest := &TestData{
+		path:         "../test/test_files/bank_sample.csv",
+		expectedCode: http.StatusOK,
+		csvKey:       h.bankerHandler.CSVKey,
+	}
+	tests = append(tests, correctTest)
 
-	h.banker.Router.ServeHTTP(recorder, correctRequest)
-	response := recorder.Result()
-	h.Assert().Equal(200, response.StatusCode, "Should return 200 OK")
+	invalidFileTest := &TestData{
+		path:         "../test/test_files/invalid_bank_sample.csv",
+		expectedCode: http.StatusBadRequest,
+		csvKey:       h.bankerHandler.CSVKey,
+	}
+	tests = append(tests, invalidFileTest)
 
-	// incorrect dir
-	invalidDirRecorder := httptest.NewRecorder()
-	invalidDir, err := filepath.Abs("../test/test_files/invalid_bank_sample.csv")
-	h.Assert().Nil(err, "Should not error")
+	invalidCSVTest := &TestData{
+		path:         "../test/test_files/invalid_bank_sample.csv",
+		expectedCode: http.StatusBadRequest,
+		csvKey:       "invalid",
+	}
+	tests = append(tests, invalidCSVTest)
 
-	invalidDirRequest := h.prepareMultipartRequest(invalidDir, h.bankerHandler.CSVKey)
+	h.doFileUploadTest(tests)
+}
 
-	h.banker.Router.ServeHTTP(invalidDirRecorder, invalidDirRequest)
-	invalidResponse := invalidDirRecorder.Result()
-	h.Assert().Equal(400, invalidResponse.StatusCode, "Should return 400 bad request ")
+func (h *HttpSuite) doFileUploadTest(tests []*TestData) {
+	for _, test := range tests {
+		recorder := httptest.NewRecorder()
+		dir, err := filepath.Abs(test.path)
+		h.Assert().Nil(err, "Should not error")
+
+		request := h.prepareMultipartRequest(dir, test.csvKey)
+
+		h.banker.Router.ServeHTTP(recorder, request)
+		response := recorder.Result()
+		h.Assert().Equal(test.expectedCode, response.StatusCode, "Should return what expected")
+	}
 }
