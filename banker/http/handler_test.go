@@ -10,7 +10,11 @@ import (
 	"path/filepath"
 	"testing"
 
+	"gopkg.in/mgo.v2/bson"
+
 	banker "github.com/elanq/daily_tools/banker/http"
+	"github.com/elanq/daily_tools/banker/model"
+	"github.com/elanq/daily_tools/banker/mongo"
 	"github.com/elanq/daily_tools/banker/parser"
 	"github.com/elanq/daily_tools/banker/process"
 	"github.com/pressly/chi"
@@ -44,10 +48,18 @@ func (h *HttpSuite) initHTTP() {
 
 func (h *HttpSuite) SetupSuite() {
 	gotenv.Load("../env.sample")
+	dBName := os.Getenv("DB_NAME")
+	collectionName := "banker_test_record"
+
+	mongoDriver := mongo.NewMongoDriver(dBName, collectionName)
 	h.reader = parser.NewBankReader()
-	h.bankerHandler = banker.NewHandler(h.reader)
+	h.bankerHandler = banker.NewHandler(h.reader, mongoDriver)
 	h.banker = process.NewBanker()
 	h.initHTTP()
+}
+
+func (h *HttpSuite) TearDownSuite() {
+	h.cleanupData()
 }
 
 func (h *HttpSuite) TestNewHandler() {
@@ -115,5 +127,14 @@ func (h *HttpSuite) doFileUploadTest(tests []*TestData) {
 		h.banker.Router.ServeHTTP(recorder, request)
 		response := recorder.Result()
 		h.Assert().Equal(test.expectedCode, response.StatusCode, "Should return what expected")
+	}
+}
+
+func (h *HttpSuite) cleanupData() {
+	var results []model.BankContent
+	h.bankerHandler.MongoDriver.Find(bson.M{}, &results)
+
+	for _, result := range results {
+		h.bankerHandler.MongoDriver.Remove(result.ID)
 	}
 }

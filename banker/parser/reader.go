@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/elanq/daily_tools/banker/model"
 )
 
@@ -82,6 +84,7 @@ func (p *BankReader) ParseContent() ([]*model.BankContent, error) {
 		amount, _ := strconv.ParseFloat(record[3], 32)
 		balance, _ := strconv.ParseFloat(record[5], 32)
 
+		content.ID = bson.NewObjectId()
 		content.Date = record[0]
 		content.Notes = record[1]
 		content.Branch = record[2]

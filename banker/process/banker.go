@@ -23,8 +23,9 @@ func NewBanker() *Banker {
 	dbName := os.Getenv("DB_NAME")
 	collectionName := "collection_banker"
 	reader := parser.NewBankReader()
-	bankerHandler := bankerhttp.NewHandler(reader)
 	mongoDriver := mongo.NewMongoDriver(dbName, collectionName)
+	bankerHandler := bankerhttp.NewHandler(reader, mongoDriver)
+
 	return &Banker{
 		BankerHandler: bankerHandler,
 		Reader:        reader,
