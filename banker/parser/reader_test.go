@@ -5,58 +5,81 @@ import (
 	"testing"
 
 	"github.com/elanq/daily_tools/banker/parser"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestNewBankReader(t *testing.T) {
-	reader := parser.NewBankReader()
-	assert.NotNil(t, reader, "Should not return nil")
+type ReaderSuite struct {
+	suite.Suite
+	Reader        *parser.BankReader
+	InvalidReader *parser.BankReader
 }
 
-func TestReadFile(t *testing.T) {
-	reader := parser.NewBankReader()
+func (r *ReaderSuite) SetupSuite() {
+	r.Reader = parser.NewBankReader()
+	r.InvalidReader = parser.NewBankReader()
+}
 
+func TestReaderSuite(t *testing.T) {
+	suite.Run(t, new(ReaderSuite))
+}
+
+func (r *ReaderSuite) TestNewBankReader() {
+	r.Assert().NotNil(r.Reader, "should be not nil")
+}
+
+func (r *ReaderSuite) TestReadFile() {
 	correctDir, err := filepath.Abs("../test/test_files/bank_sample.csv")
-	assert.Nil(t, err, "Should not return any error")
-	err = reader.ReadFile(correctDir)
-	assert.Nil(t, err, "Should not return any error")
+	r.Assert().Nil(err, "Should not return any error")
+	err = r.Reader.ReadFile(correctDir)
+	r.Assert().Nil(err, "Should not return any error")
 
 	wrongDir, wrongErr := filepath.Abs("../test/test_files/bank_sample.go")
-	assert.Nil(t, wrongErr, "Should not return any error")
-	wrongErr = reader.ReadFile(wrongDir)
-	assert.Error(t, wrongErr, "Should error because not existent file")
+	r.Assert().Nil(wrongErr, "Should not return any error")
+	wrongErr = r.Reader.ReadFile(wrongDir)
+	r.Assert().Error(wrongErr, "Should error because not existent file")
 }
 
-func TestParseContent(t *testing.T) {
-	reader := parser.NewBankReader()
-	invalidReader := parser.NewBankReader()
-
+func (r *ReaderSuite) TestParseContent() {
 	correctDir, err := filepath.Abs("../test/test_files/bank_sample.csv")
-	assert.Nil(t, err, "Should not return any error")
-	err = reader.ReadFile(correctDir)
-	assert.Nil(t, err, "Should not return any error")
+	r.Assert().Nil(err, "Should not return any error")
+	err = r.Reader.ReadFile(correctDir)
+	r.Assert().Nil(err, "Should not return any error")
 
 	invalidDir, invalidErr := filepath.Abs("../test/test_files/invalid_bank_sample.csv")
-	assert.Nil(t, invalidErr, "Should not return any error")
-	invalidErr = invalidReader.ReadFile(invalidDir)
-	assert.Nil(t, invalidErr, "Should not return any error")
+	r.Assert().Nil(invalidErr, "Should not return any error")
+	invalidErr = r.InvalidReader.ReadFile(invalidDir)
+	r.Assert().Nil(invalidErr, "Should not return any error")
 
-	records, err := reader.ParseContent()
-	assert.Nil(t, err, "Should not return any error")
+	records, err := r.Reader.ParseContent("17")
+	r.Assert().Nil(err, "Should not return any error")
 	for _, record := range records {
-		assert.NotNil(t, record.Date, "Should contains value")
-		assert.NotNil(t, record.Notes, "Should contains value")
-		assert.NotNil(t, record.Branch, "Should contains value")
-		assert.NotNil(t, record.Amount, "Should contains value")
-		assert.NotNil(t, record.Factor, "Should contains value")
-		assert.NotNil(t, record.Balance, "Should contains value")
+		r.Assert().NotNil(record.Date, "Should contains value")
+		r.Assert().NotNil(record.Notes, "Should contains value")
+		r.Assert().NotNil(record.Branch, "Should contains value")
+		r.Assert().NotNil(record.Amount, "Should contains value")
+		r.Assert().NotNil(record.Factor, "Should contains value")
+		r.Assert().NotNil(record.Balance, "Should contains value")
 	}
 
-	_, invalidErr = invalidReader.ParseContent()
-	assert.Error(t, invalidErr, "Should return csv error")
+	_, invalidErr = r.InvalidReader.ParseContent("17")
+	r.Assert().Error(invalidErr, "Should return csv error")
 
-	invalidReader.RawContent = ""
-	_, invalidErr = invalidReader.ParseContent()
-	assert.Error(t, invalidErr, "Should return content error")
-
+	r.Reader.RawContent = ""
+	_, invalidErr = r.Reader.ParseContent("2017")
+	r.Assert().Error(invalidErr, "Should return content error")
 }
+
+func (r *ReaderSuite) TestParseDate() {
+	testDate := "01/12/17"
+	date := parser.ParseDate(testDate)
+
+	day := date.Day()
+	month := date.Month().String()
+	year := date.Year()
+
+	r.Assert().Equal(1, day, "should be day 1")
+	r.Assert().Equal("December", month, "should be December")
+	r.Assert().Equal(2017, year, "should be year 2017")
+}
+
+// TODO : TestReadByte

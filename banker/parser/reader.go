@@ -8,6 +8,9 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
+
+	"gopkg.in/mgo.v2/bson"
 
 	"github.com/elanq/daily_tools/banker/model"
 )
@@ -51,7 +54,18 @@ func (p *BankReader) ReadFile(filepath string) error {
 	return nil
 }
 
-func (p *BankReader) ParseContent() ([]*model.BankContent, error) {
+func (p *BankReader) ReadBytes(bytes []byte) {
+	p.sanitizeContent(bytes)
+}
+
+func ParseDate(rawDate string) time.Time {
+	rawDate = strings.Replace(rawDate, "'", "", -1)
+	date, _ := time.Parse("02/01/06", rawDate)
+
+	return date
+}
+
+func (p *BankReader) ParseContent(year string) ([]*model.BankContent, error) {
 	var contents []*model.BankContent
 
 	if p.RawContent == "" {
@@ -78,7 +92,8 @@ func (p *BankReader) ParseContent() ([]*model.BankContent, error) {
 		amount, _ := strconv.ParseFloat(record[3], 32)
 		balance, _ := strconv.ParseFloat(record[5], 32)
 
-		content.Date = record[0]
+		content.ID = bson.NewObjectId()
+		content.Date = ParseDate(record[0] + "/" + year)
 		content.Notes = record[1]
 		content.Branch = record[2]
 
