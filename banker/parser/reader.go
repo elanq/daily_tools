@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -57,7 +58,14 @@ func (p *BankReader) ReadBytes(bytes []byte) {
 	p.sanitizeContent(bytes)
 }
 
-func (p *BankReader) ParseContent() ([]*model.BankContent, error) {
+func ParseDate(rawDate string) time.Time {
+	rawDate = strings.Replace(rawDate, "'", "", -1)
+	date, _ := time.Parse("02/01/06", rawDate)
+
+	return date
+}
+
+func (p *BankReader) ParseContent(year string) ([]*model.BankContent, error) {
 	var contents []*model.BankContent
 
 	if p.RawContent == "" {
@@ -85,7 +93,7 @@ func (p *BankReader) ParseContent() ([]*model.BankContent, error) {
 		balance, _ := strconv.ParseFloat(record[5], 32)
 
 		content.ID = bson.NewObjectId()
-		content.Date = record[0]
+		content.Date = ParseDate(record[0] + "/" + year)
 		content.Notes = record[1]
 		content.Branch = record[2]
 

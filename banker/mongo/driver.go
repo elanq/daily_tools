@@ -34,15 +34,6 @@ func (d *MongoDriver) Insert(document interface{}) error {
 	return err
 }
 
-func (d *MongoDriver) BulkInsert(documents ...interface{}) error {
-	bulk := d.Collection.Bulk()
-	bulk.Unordered()
-	bulk.Insert(documents)
-	_, err := bulk.Run()
-
-	return err
-}
-
 func (d *MongoDriver) FindOne(selector interface{}, result interface{}) error {
 	err := d.Collection.FindId(selector).One(result)
 	return err

@@ -3,6 +3,7 @@ package mongo_test
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/elanq/daily_tools/banker/model"
 	"github.com/elanq/daily_tools/banker/mongo"
@@ -32,7 +33,7 @@ func (d *DriverSuite) SetupSuite() {
 
 func buildBankContent() *model.BankContent {
 	return &model.BankContent{
-		Date:    "12-03",
+		Date:    time.Now(),
 		Notes:   "Notes",
 		Branch:  "1234",
 		Amount:  1000000,

@@ -33,6 +33,7 @@ type TestData struct {
 	path         string
 	csvKey       string
 	expectedCode int
+	url          string
 }
 
 func TestHttpSuite(t *testing.T) {
@@ -42,7 +43,7 @@ func TestHttpSuite(t *testing.T) {
 func (h *HttpSuite) initHTTP() {
 	router := chi.NewRouter()
 	router.Post("/banker/upload", h.bankerHandler.FileUpload)
-
+	router.Get("/banker/report", h.bankerHandler.MonthlyReport)
 	h.banker.Router = router
 }
 
@@ -87,6 +88,35 @@ func (h *HttpSuite) prepareMultipartRequest(dir string, formKey string) *http.Re
 	req.Header.Add("Content-Type", bodywriter.FormDataContentType()) //this is super essential
 
 	return req
+}
+
+func (h *HttpSuite) TestMonthlyReport() {
+	var tests []*TestData
+	correctTest := &TestData{
+		url:          "http://localhost:12345/banker/report?month=12&year=17",
+		expectedCode: http.StatusOK,
+	}
+	tests = append(tests, correctTest)
+
+	paramNotSpecifiedTest := &TestData{
+		url:          "http://localhost:12345/banker/report",
+		expectedCode: http.StatusBadRequest,
+	}
+	tests = append(tests, paramNotSpecifiedTest)
+
+	h.doMonthlyReportTest(tests)
+}
+
+func (h *HttpSuite) doMonthlyReportTest(tests []*TestData) {
+	for _, test := range tests {
+		recorder := httptest.NewRecorder()
+		req, err := http.NewRequest("GET", test.url, nil)
+		h.Assert().Nil(err, "should not error")
+
+		h.banker.Router.ServeHTTP(recorder, req)
+		resp := recorder.Result()
+		h.Assert().Equal(test.expectedCode, resp.StatusCode, "should satisfy status code")
+	}
 }
 
 func (h *HttpSuite) TestFileUpload() {

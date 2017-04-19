@@ -44,6 +44,7 @@ func setRouter(bankerHandler *bankerhttp.Handler) http.Handler {
 	router.Use(middleware.Timeout(60 * time.Second))
 
 	router.Post("/banker/upload", bankerHandler.FileUpload)
+	router.Get("/banker/report", bankerHandler.MonthlyReport)
 
 	return router
 }
