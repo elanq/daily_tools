@@ -64,6 +64,12 @@ func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(results) < 1 {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(([]byte("404 - Content not found")))
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }

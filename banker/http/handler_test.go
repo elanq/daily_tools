@@ -93,7 +93,7 @@ func (h *HttpSuite) prepareMultipartRequest(dir string, formKey string) *http.Re
 func (h *HttpSuite) TestMonthlyReport() {
 	var tests []*TestData
 	correctTest := &TestData{
-		url:          "http://localhost:12345/banker/report?month=12&year=17",
+		url:          "http://localhost:12345/banker/report?month=10&year=17",
 		expectedCode: http.StatusOK,
 	}
 	tests = append(tests, correctTest)
@@ -103,6 +103,12 @@ func (h *HttpSuite) TestMonthlyReport() {
 		expectedCode: http.StatusBadRequest,
 	}
 	tests = append(tests, paramNotSpecifiedTest)
+
+	dataNotFoundTest := &TestData{
+		url:          "http://localhost:12345/banker/report?month=1&year=10",
+		expectedCode: http.StatusNotFound,
+	}
+	tests = append(tests, dataNotFoundTest)
 
 	h.doMonthlyReportTest(tests)
 }
