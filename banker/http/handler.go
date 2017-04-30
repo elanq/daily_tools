@@ -39,10 +39,27 @@ func (h *Handler) saveContent(bankContents []*model.BankContent) error {
 	return nil
 }
 
-func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
+//TODO
+//Create monthly report for financial conditioning
+//Same with monthly report so probably you need to separate the data extraction process to another class/method
+
+//TODO
+//1. Handle daily report as charts
+//2. Generate brief summary with information like
+// -> highest income
+// -> highest outcome
+// -> most spending in a day
+// -> total balance
+//3. accept these request types
+// -> no type will give raw json format of mutation record
+// -> type=monthly_summary to give return as summary
+// -> type=chart will give chart of income and expenditure per day. Will presented as bar chart
+//4. change this method to dauly reports. as it would be more appropriate
+func (h *Handler) DailyReport(w http.ResponseWriter, r *http.Request) {
 	month := r.URL.Query().Get("month")
 	year := r.URL.Query().Get("year")
 	var results []model.BankContent
+
 	if month == "" || year == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("should specify month and year as param"))
@@ -50,6 +67,7 @@ func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	minTime := parser.ParseDate("01/" + month + "/" + year)
+
 	maxTime := minTime.AddDate(0, 1, 0)
 	query := bson.M{
 		"date": bson.M{
@@ -57,6 +75,7 @@ func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
 			"$lt":  maxTime,
 		},
 	}
+
 	err := h.MongoDriver.Find(query, &results)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

@@ -2,13 +2,16 @@ package http_test
 
 import (
 	"bytes"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -34,6 +37,7 @@ type TestData struct {
 	csvKey       string
 	expectedCode int
 	url          string
+	testName     string
 }
 
 func TestHttpSuite(t *testing.T) {
@@ -43,7 +47,7 @@ func TestHttpSuite(t *testing.T) {
 func (h *HttpSuite) initHTTP() {
 	router := chi.NewRouter()
 	router.Post("/banker/upload", h.bankerHandler.FileUpload)
-	router.Get("/banker/report", h.bankerHandler.MonthlyReport)
+	router.Get("/banker/report", h.bankerHandler.DailyReport)
 	h.banker.Router = router
 }
 
@@ -57,10 +61,24 @@ func (h *HttpSuite) SetupSuite() {
 	h.bankerHandler = banker.NewHandler(h.reader, mongoDriver)
 	h.banker = process.NewBanker()
 	h.initHTTP()
+	h.fillTestData()
 }
 
 func (h *HttpSuite) TearDownSuite() {
 	h.cleanupData()
+}
+
+func (h *HttpSuite) fillTestData() {
+	date, _ := time.Parse("02/01/06", "01/10/17")
+	content := &model.BankContent{
+		Date:    date,
+		Notes:   "Notes",
+		Branch:  "1234",
+		Amount:  1000000,
+		Factor:  1,
+		Balance: 2000000,
+	}
+	h.bankerHandler.MongoDriver.Insert(content)
 }
 
 func (h *HttpSuite) TestNewHandler() {
@@ -89,42 +107,6 @@ func (h *HttpSuite) prepareMultipartRequest(dir string, formKey string) *http.Re
 
 	return req
 }
-
-func (h *HttpSuite) TestMonthlyReport() {
-	var tests []*TestData
-	correctTest := &TestData{
-		url:          "http://localhost:12345/banker/report?month=10&year=17",
-		expectedCode: http.StatusOK,
-	}
-	tests = append(tests, correctTest)
-
-	paramNotSpecifiedTest := &TestData{
-		url:          "http://localhost:12345/banker/report",
-		expectedCode: http.StatusBadRequest,
-	}
-	tests = append(tests, paramNotSpecifiedTest)
-
-	dataNotFoundTest := &TestData{
-		url:          "http://localhost:12345/banker/report?month=1&year=10",
-		expectedCode: http.StatusNotFound,
-	}
-	tests = append(tests, dataNotFoundTest)
-
-	h.doMonthlyReportTest(tests)
-}
-
-func (h *HttpSuite) doMonthlyReportTest(tests []*TestData) {
-	for _, test := range tests {
-		recorder := httptest.NewRecorder()
-		req, err := http.NewRequest("GET", test.url, nil)
-		h.Assert().Nil(err, "should not error")
-
-		h.banker.Router.ServeHTTP(recorder, req)
-		resp := recorder.Result()
-		h.Assert().Equal(test.expectedCode, resp.StatusCode, "should satisfy status code")
-	}
-}
-
 func (h *HttpSuite) TestFileUpload() {
 	var tests []*TestData
 
@@ -163,6 +145,46 @@ func (h *HttpSuite) doFileUploadTest(tests []*TestData) {
 		h.banker.Router.ServeHTTP(recorder, request)
 		response := recorder.Result()
 		h.Assert().Equal(test.expectedCode, response.StatusCode, "Should return what expected")
+	}
+}
+
+func (h *HttpSuite) TestDailyReport() {
+	var tests []*TestData
+	correctTest := &TestData{
+		url:          "http://localhost:12345/banker/report?month=10&year=17",
+		expectedCode: http.StatusOK,
+		testName:     "test:success",
+	}
+	tests = append(tests, correctTest)
+
+	paramNotSpecifiedTest := &TestData{
+		url:          "http://localhost:12345/banker/report",
+		expectedCode: http.StatusBadRequest,
+		testName:     "test:unspecified_param",
+	}
+	tests = append(tests, paramNotSpecifiedTest)
+
+	dataNotFoundTest := &TestData{
+		url:          "http://localhost:12345/banker/report?month=1&year=10",
+		expectedCode: http.StatusNotFound,
+		testName:     "test:data_not_found",
+	}
+	tests = append(tests, dataNotFoundTest)
+
+	h.doDailyReport(tests)
+}
+
+func (h *HttpSuite) doDailyReport(tests []*TestData) {
+	for _, test := range tests {
+		recorder := httptest.NewRecorder()
+		req, err := http.NewRequest("GET", test.url, nil)
+		h.Assert().Nil(err, "should not error")
+
+		h.banker.Router.ServeHTTP(recorder, req)
+		resp := recorder.Result()
+		b, _ := ioutil.ReadAll(resp.Body)
+		fmt.Println(test.testName, "return : ", string(b))
+		h.Assert().Equal(test.expectedCode, resp.StatusCode, "should satisfy status code")
 	}
 }
 
