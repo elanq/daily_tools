@@ -50,7 +50,7 @@ func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	minTime := parser.ParseDate("01/01/" + year)
-	maxTime := minTime.AddDate(0, 0, 1)
+	maxTime := minTime.AddDate(1, 0, 0)
 
 	err := h.contentQuery(minTime, maxTime, &results)
 

@@ -47,7 +47,8 @@ func TestHttpSuite(t *testing.T) {
 func (h *HttpSuite) initHTTP() {
 	router := chi.NewRouter()
 	router.Post("/banker/upload", h.bankerHandler.FileUpload)
-	router.Get("/banker/report", h.bankerHandler.DailyReport)
+	router.Get("/banker/report/daily", h.bankerHandler.DailyReport)
+	router.Get("/banker/report/monthly", h.bankerHandler.MonthlyReport)
 	h.banker.Router = router
 }
 
@@ -148,33 +149,54 @@ func (h *HttpSuite) doFileUploadTest(tests []*TestData) {
 	}
 }
 
-func (h *HttpSuite) TestDailyReport() {
+func (h *HttpSuite) TestReport() {
 	var tests []*TestData
-	correctTest := &TestData{
-		url:          "http://localhost:12345/banker/report?month=10&year=17",
+	dailyCorrectTest := &TestData{
+		url:          "http://localhost:12345/banker/report/daily?month=10&year=17",
 		expectedCode: http.StatusOK,
-		testName:     "test:success",
+		testName:     "test:daily:success",
 	}
-	tests = append(tests, correctTest)
+	tests = append(tests, dailyCorrectTest)
 
-	paramNotSpecifiedTest := &TestData{
-		url:          "http://localhost:12345/banker/report",
+	dailyParamNotSpecifiedTest := &TestData{
+		url:          "http://localhost:12345/banker/report/daily",
 		expectedCode: http.StatusBadRequest,
-		testName:     "test:unspecified_param",
+		testName:     "test:daily:unspecified_param",
 	}
-	tests = append(tests, paramNotSpecifiedTest)
+	tests = append(tests, dailyParamNotSpecifiedTest)
 
-	dataNotFoundTest := &TestData{
-		url:          "http://localhost:12345/banker/report?month=1&year=10",
+	dailyDataNotFoundTest := &TestData{
+		url:          "http://localhost:12345/banker/report/daily?month=1&year=10",
 		expectedCode: http.StatusNotFound,
-		testName:     "test:data_not_found",
+		testName:     "test:daily:data_not_found",
 	}
-	tests = append(tests, dataNotFoundTest)
+	tests = append(tests, dailyDataNotFoundTest)
 
-	h.doDailyReport(tests)
+	monthlyCorrectTest := &TestData{
+		url:          "http://localhost:12345/banker/report/monthly?year=17",
+		expectedCode: http.StatusOK,
+		testName:     "test:monthly:success",
+	}
+	tests = append(tests, monthlyCorrectTest)
+
+	monthlyParamNotSpecifiedTest := &TestData{
+		url:          "http://localhost:12345/banker/report/monthly",
+		expectedCode: http.StatusBadRequest,
+		testName:     "test:monthly:unspecified_param",
+	}
+	tests = append(tests, monthlyParamNotSpecifiedTest)
+
+	monthlyDataNotFoundTest := &TestData{
+		url:          "http://localhost:12345/banker/report/monthly?year=10",
+		expectedCode: http.StatusNotFound,
+		testName:     "test:monthly:data_not_found",
+	}
+	tests = append(tests, monthlyDataNotFoundTest)
+
+	h.doReportTest(tests)
 }
 
-func (h *HttpSuite) doDailyReport(tests []*TestData) {
+func (h *HttpSuite) doReportTest(tests []*TestData) {
 	for _, test := range tests {
 		recorder := httptest.NewRecorder()
 		req, err := http.NewRequest("GET", test.url, nil)
