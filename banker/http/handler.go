@@ -40,6 +40,19 @@ func (h *Handler) saveContent(bankContents []*model.BankContent) error {
 	return nil
 }
 
+//TODO
+//1. Handle daily report as charts
+//2. Generate brief summary with information like
+// -> highest income
+// -> highest outcome
+// -> most spending in a day
+// -> total balance
+//3. accept these request types
+// -> no type will give raw json format of mutation record
+// -> type=monthly_summary to give return as summary
+// -> type=chart will give chart of income and expenditure per day. Will presented as bar chart
+//4. change this method to dauly reports. as it would be more appropriate
+
 func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
 	year := r.URL.Query().Get("year")
 	var results []model.BankContent
@@ -70,18 +83,6 @@ func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
-//TODO
-//1. Handle daily report as charts
-//2. Generate brief summary with information like
-// -> highest income
-// -> highest outcome
-// -> most spending in a day
-// -> total balance
-//3. accept these request types
-// -> no type will give raw json format of mutation record
-// -> type=monthly_summary to give return as summary
-// -> type=chart will give chart of income and expenditure per day. Will presented as bar chart
-//4. change this method to dauly reports. as it would be more appropriate
 func (h *Handler) DailyReport(w http.ResponseWriter, r *http.Request) {
 	month := r.URL.Query().Get("month")
 	year := r.URL.Query().Get("year")
