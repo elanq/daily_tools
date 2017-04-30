@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -39,9 +40,35 @@ func (h *Handler) saveContent(bankContents []*model.BankContent) error {
 	return nil
 }
 
-//TODO
-//Create monthly report for financial conditioning
-//Same with monthly report so probably you need to separate the data extraction process to another class/method
+func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
+	year := r.URL.Query().Get("year")
+	var results []model.BankContent
+
+	if year == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("should specify year as param"))
+		return
+	}
+	minTime := parser.ParseDate("01/01/" + year)
+	maxTime := minTime.AddDate(0, 0, 1)
+
+	err := h.contentQuery(minTime, maxTime, &results)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error while processing request"))
+		return
+	}
+
+	if len(results) < 1 {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(([]byte("404 - Content not found")))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
 
 //TODO
 //1. Handle daily report as charts
@@ -67,16 +94,9 @@ func (h *Handler) DailyReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	minTime := parser.ParseDate("01/" + month + "/" + year)
-
 	maxTime := minTime.AddDate(0, 1, 0)
-	query := bson.M{
-		"date": bson.M{
-			"$gte": minTime,
-			"$lt":  maxTime,
-		},
-	}
 
-	err := h.MongoDriver.Find(query, &results)
+	err := h.contentQuery(minTime, maxTime, &results)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("error while processing request"))
@@ -132,4 +152,15 @@ func (h *Handler) FileUpload(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(bankContents)
+}
+
+func (h *Handler) contentQuery(minTime time.Time, maxTime time.Time, results *[]model.BankContent) error {
+	query := bson.M{
+		"date": bson.M{
+			"$gte": minTime,
+			"$lt":  maxTime,
+		},
+	}
+
+	return h.MongoDriver.Find(query, results)
 }
