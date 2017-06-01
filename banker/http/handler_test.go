@@ -108,6 +108,7 @@ func (h *HttpSuite) prepareMultipartRequest(dir string, formKey string) *http.Re
 
 	return req
 }
+
 func (h *HttpSuite) TestFileUpload() {
 	var tests []*TestData
 
