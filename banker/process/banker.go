@@ -19,6 +19,8 @@ type Banker struct {
 	Router        http.Handler
 }
 
+// Initiate Banker struct
+// thist struct reference needed dependencies
 func NewBanker() *Banker {
 	dbName := os.Getenv("DB_NAME")
 	collectionName := "collection_banker"
@@ -34,6 +36,7 @@ func NewBanker() *Banker {
 	}
 }
 
+// Set route for the service
 func setRouter(bankerHandler *bankerhttp.Handler) http.Handler {
 	router := chi.NewRouter()
 

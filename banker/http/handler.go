@@ -14,6 +14,7 @@ import (
 	"github.com/elanq/daily_tools/banker/parser"
 )
 
+//Handler type. used to reference csv reader, csv key, year key and mongodriver
 type Handler struct {
 	Reader      *parser.BankReader
 	CSVKey      string
@@ -21,6 +22,7 @@ type Handler struct {
 	MongoDriver *mongo.MongoDriver
 }
 
+//create new type of request handler
 func NewHandler(reader *parser.BankReader, driver *mongo.MongoDriver) *Handler {
 	return &Handler{
 		Reader:      reader,
@@ -30,6 +32,8 @@ func NewHandler(reader *parser.BankReader, driver *mongo.MongoDriver) *Handler {
 	}
 }
 
+//Insert content to db
+//TODO: use InsertAll if possible
 func (h *Handler) saveContent(bankContents []*model.BankContent) error {
 	for _, content := range bankContents {
 		err := h.MongoDriver.Insert(content)
@@ -51,8 +55,9 @@ func (h *Handler) saveContent(bankContents []*model.BankContent) error {
 // -> no type will give raw json format of mutation record
 // -> type=monthly_summary to give return as summary
 // -> type=chart will give chart of income and expenditure per day. Will presented as bar chart
-//4. change this method to dauly reports. as it would be more appropriate
 
+//provide transaction data per day by given year
+// TODO: need to aggregate into monthly data tho
 func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
 	year := r.URL.Query().Get("year")
 	var results []model.BankContent
@@ -65,7 +70,7 @@ func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
 	minTime := parser.ParseDate("01/01/" + year)
 	maxTime := minTime.AddDate(1, 0, 0)
 
-	err := h.contentQuery(minTime, maxTime, &results)
+	err := h.fetchContent(minTime, maxTime, &results)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -83,6 +88,7 @@ func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
+//provide transaction data per day by given month
 func (h *Handler) DailyReport(w http.ResponseWriter, r *http.Request) {
 	month := r.URL.Query().Get("month")
 	year := r.URL.Query().Get("year")
@@ -97,7 +103,7 @@ func (h *Handler) DailyReport(w http.ResponseWriter, r *http.Request) {
 	minTime := parser.ParseDate("01/" + month + "/" + year)
 	maxTime := minTime.AddDate(0, 1, 0)
 
-	err := h.contentQuery(minTime, maxTime, &results)
+	err := h.fetchContent(minTime, maxTime, &results)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("error while processing request"))
@@ -155,7 +161,8 @@ func (h *Handler) FileUpload(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(bankContents)
 }
 
-func (h *Handler) contentQuery(minTime time.Time, maxTime time.Time, results *[]model.BankContent) error {
+//populate bank content
+func (h *Handler) fetchContent(minTime time.Time, maxTime time.Time, results *[]model.BankContent) error {
 	query := bson.M{
 		"date": bson.M{
 			"$gte": minTime,
