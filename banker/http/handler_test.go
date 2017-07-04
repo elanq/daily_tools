@@ -2,13 +2,16 @@ package http_test
 
 import (
 	"bytes"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -34,6 +37,7 @@ type TestData struct {
 	csvKey       string
 	expectedCode int
 	url          string
+	testName     string
 }
 
 func TestHttpSuite(t *testing.T) {
@@ -43,24 +47,39 @@ func TestHttpSuite(t *testing.T) {
 func (h *HttpSuite) initHTTP() {
 	router := chi.NewRouter()
 	router.Post("/banker/upload", h.bankerHandler.FileUpload)
-	router.Get("/banker/report", h.bankerHandler.MonthlyReport)
+	router.Get("/banker/report/daily", h.bankerHandler.DailyReport)
+	router.Get("/banker/report/monthly", h.bankerHandler.MonthlyReport)
 	h.banker.Router = router
 }
 
 func (h *HttpSuite) SetupSuite() {
 	gotenv.Load("../env.sample")
 	dBName := os.Getenv("DB_NAME")
-	collectionName := "banker_test_record"
+	collectionName := os.Getenv("DB_COLLECTION")
 
 	mongoDriver := mongo.NewMongoDriver(dBName, collectionName)
 	h.reader = parser.NewBankReader()
 	h.bankerHandler = banker.NewHandler(h.reader, mongoDriver)
 	h.banker = process.NewBanker()
 	h.initHTTP()
+	h.fillTestData()
 }
 
 func (h *HttpSuite) TearDownSuite() {
 	h.cleanupData()
+}
+
+func (h *HttpSuite) fillTestData() {
+	date, _ := time.Parse("02/01/06", "01/10/17")
+	content := &model.BankContent{
+		Date:    date,
+		Notes:   "Notes",
+		Branch:  "1234",
+		Amount:  1000000,
+		Factor:  1,
+		Balance: 2000000,
+	}
+	h.bankerHandler.MongoDriver.Insert(content)
 }
 
 func (h *HttpSuite) TestNewHandler() {
@@ -90,41 +109,6 @@ func (h *HttpSuite) prepareMultipartRequest(dir string, formKey string) *http.Re
 	return req
 }
 
-func (h *HttpSuite) TestMonthlyReport() {
-	var tests []*TestData
-	correctTest := &TestData{
-		url:          "http://localhost:12345/banker/report?month=10&year=17",
-		expectedCode: http.StatusOK,
-	}
-	tests = append(tests, correctTest)
-
-	paramNotSpecifiedTest := &TestData{
-		url:          "http://localhost:12345/banker/report",
-		expectedCode: http.StatusBadRequest,
-	}
-	tests = append(tests, paramNotSpecifiedTest)
-
-	dataNotFoundTest := &TestData{
-		url:          "http://localhost:12345/banker/report?month=1&year=10",
-		expectedCode: http.StatusNotFound,
-	}
-	tests = append(tests, dataNotFoundTest)
-
-	h.doMonthlyReportTest(tests)
-}
-
-func (h *HttpSuite) doMonthlyReportTest(tests []*TestData) {
-	for _, test := range tests {
-		recorder := httptest.NewRecorder()
-		req, err := http.NewRequest("GET", test.url, nil)
-		h.Assert().Nil(err, "should not error")
-
-		h.banker.Router.ServeHTTP(recorder, req)
-		resp := recorder.Result()
-		h.Assert().Equal(test.expectedCode, resp.StatusCode, "should satisfy status code")
-	}
-}
-
 func (h *HttpSuite) TestFileUpload() {
 	var tests []*TestData
 
@@ -132,6 +116,7 @@ func (h *HttpSuite) TestFileUpload() {
 		path:         "../test/test_files/bank_sample.csv",
 		expectedCode: http.StatusOK,
 		csvKey:       h.bankerHandler.CSVKey,
+		testName:     "test:upload:correct",
 	}
 	tests = append(tests, correctTest)
 
@@ -139,6 +124,7 @@ func (h *HttpSuite) TestFileUpload() {
 		path:         "../test/test_files/invalid_bank_sample.csv",
 		expectedCode: http.StatusBadRequest,
 		csvKey:       h.bankerHandler.CSVKey,
+		testName:     "test:upload:invalid_file",
 	}
 	tests = append(tests, invalidFileTest)
 
@@ -146,8 +132,16 @@ func (h *HttpSuite) TestFileUpload() {
 		path:         "../test/test_files/invalid_bank_sample.csv",
 		expectedCode: http.StatusBadRequest,
 		csvKey:       "invalid",
+		testName:     "test:upload:invalid_csv",
 	}
 	tests = append(tests, invalidCSVTest)
+
+	duplicateTest := &TestData{
+		path:         "../test/test_files/bank_sample.csv",
+		expectedCode: http.StatusNotModified,
+		csvKey:       h.bankerHandler.CSVKey,
+	}
+	tests = append(tests, duplicateTest)
 
 	h.doFileUploadTest(tests)
 }
@@ -163,6 +157,67 @@ func (h *HttpSuite) doFileUploadTest(tests []*TestData) {
 		h.banker.Router.ServeHTTP(recorder, request)
 		response := recorder.Result()
 		h.Assert().Equal(test.expectedCode, response.StatusCode, "Should return what expected")
+	}
+}
+
+func (h *HttpSuite) TestReport() {
+	var tests []*TestData
+	dailyCorrectTest := &TestData{
+		url:          "http://localhost:12345/banker/report/daily?month=10&year=17",
+		expectedCode: http.StatusOK,
+		testName:     "test:daily:success",
+	}
+	tests = append(tests, dailyCorrectTest)
+
+	dailyParamNotSpecifiedTest := &TestData{
+		url:          "http://localhost:12345/banker/report/daily",
+		expectedCode: http.StatusBadRequest,
+		testName:     "test:daily:unspecified_param",
+	}
+	tests = append(tests, dailyParamNotSpecifiedTest)
+
+	dailyDataNotFoundTest := &TestData{
+		url:          "http://localhost:12345/banker/report/daily?month=1&year=10",
+		expectedCode: http.StatusNotFound,
+		testName:     "test:daily:data_not_found",
+	}
+	tests = append(tests, dailyDataNotFoundTest)
+
+	monthlyCorrectTest := &TestData{
+		url:          "http://localhost:12345/banker/report/monthly?year=17",
+		expectedCode: http.StatusOK,
+		testName:     "test:monthly:success",
+	}
+	tests = append(tests, monthlyCorrectTest)
+
+	monthlyParamNotSpecifiedTest := &TestData{
+		url:          "http://localhost:12345/banker/report/monthly",
+		expectedCode: http.StatusBadRequest,
+		testName:     "test:monthly:unspecified_param",
+	}
+	tests = append(tests, monthlyParamNotSpecifiedTest)
+
+	monthlyDataNotFoundTest := &TestData{
+		url:          "http://localhost:12345/banker/report/monthly?year=10",
+		expectedCode: http.StatusNotFound,
+		testName:     "test:monthly:data_not_found",
+	}
+	tests = append(tests, monthlyDataNotFoundTest)
+
+	h.doReportTest(tests)
+}
+
+func (h *HttpSuite) doReportTest(tests []*TestData) {
+	for _, test := range tests {
+		recorder := httptest.NewRecorder()
+		req, err := http.NewRequest("GET", test.url, nil)
+		h.Assert().Nil(err, "should not error")
+
+		h.banker.Router.ServeHTTP(recorder, req)
+		resp := recorder.Result()
+		b, _ := ioutil.ReadAll(resp.Body)
+		fmt.Println(test.testName, "return : ", string(b))
+		h.Assert().Equal(test.expectedCode, resp.StatusCode, "should satisfy status code")
 	}
 }
 

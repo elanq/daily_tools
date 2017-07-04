@@ -82,4 +82,10 @@ func (r *ReaderSuite) TestParseDate() {
 	r.Assert().Equal(2017, year, "should be year 2017")
 }
 
-// TODO : TestReadByte
+func (r *ReaderSuite) TestReadByte() {
+	expected := "\n\n\nTanggal,Keterangan,Cabang,Jumlah,,Saldo\n'"
+
+	r.Reader.RawContent = "No. Rekening,=,'123412341234\nNama,=,NAME\nMata Uang,=,IDR\n\nTanggal,Keterangan,Cabang,Jumlah,,Saldo\n'"
+	r.Reader.ReadBytes([]byte(r.Reader.RawContent))
+	r.Assert().Equal(expected, r.Reader.RawContent, "should filter unecessary text")
+}

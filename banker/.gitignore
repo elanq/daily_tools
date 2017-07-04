@@ -1,3 +1,5 @@
 *debug
 .env
-
+*.swp
+debug
+*vim-go-test-compile
