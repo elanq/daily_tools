@@ -35,7 +35,7 @@ func NewHandler(reader *parser.BankReader, driver *mongo.MongoDriver) *Handler {
 
 //Insert content to db
 func (h *Handler) saveContent(bankContents []*model.BankContent) error {
-	if h.checkContent(bankContents[0]) {
+	if h.checkContent(bankContents[0], bankContents[len(bankContents)-1]) {
 		return errors.New("Transactions already exists")
 	}
 
@@ -174,11 +174,11 @@ func (h *Handler) fetchContent(minTime time.Time, maxTime time.Time, results *[]
 		},
 	}
 
-	return h.MongoDriver.Find(query, results)
+	return h.MongoDriver.Find(query, results, "-date")
 }
 
-func (h *Handler) checkContent(firstRow *model.BankContent) bool {
-	if firstRow == nil {
+func (h *Handler) checkContent(firstRow *model.BankContent, lastRow *model.BankContent) bool {
+	if firstRow == nil && lastRow == nil {
 		return false
 	}
 
@@ -187,6 +187,7 @@ func (h *Handler) checkContent(firstRow *model.BankContent) bool {
 	query := bson.M{
 		"date": bson.M{
 			"$gte": firstRow.Date,
+			"$lte": lastRow.Date,
 		},
 	}
 

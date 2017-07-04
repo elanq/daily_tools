@@ -83,7 +83,13 @@ func (d *DriverSuite) TestFind() {
 	sampleContent.ID = objId
 	d.Driver.Insert(sampleContent)
 
+	//unsorted find
 	err := d.Driver.Find(bson.M{}, &results)
+	assert.NotEmpty(d.T(), results, "should not empty")
+	assert.Nil(d.T(), err, "Should not return any error")
+
+	//sorted find
+	err = d.Driver.Find(bson.M{}, &results, "-date")
 	assert.NotEmpty(d.T(), results, "should not empty")
 	assert.Nil(d.T(), err, "Should not return any error")
 }

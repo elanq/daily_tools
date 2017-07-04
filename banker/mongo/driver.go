@@ -47,8 +47,13 @@ func (d *MongoDriver) FindOne(selector interface{}, result interface{}) error {
 }
 
 //find data by query
-func (d *MongoDriver) Find(selector interface{}, result interface{}) error {
-	err := d.Collection.Find(selector).All(result)
+func (d *MongoDriver) Find(selector interface{}, result interface{}, sortField ...string) error {
+	var err error
+	if len(sortField) > 0 {
+		err = d.Collection.Find(selector).Sort(sortField...).All(result)
+	} else {
+		err = d.Collection.Find(selector).All(result)
+	}
 	return err
 }
 
