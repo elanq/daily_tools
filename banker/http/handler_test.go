@@ -55,7 +55,7 @@ func (h *HttpSuite) initHTTP() {
 func (h *HttpSuite) SetupSuite() {
 	gotenv.Load("../env.sample")
 	dBName := os.Getenv("DB_NAME")
-	collectionName := "banker_test_record"
+	collectionName := os.Getenv("DB_COLLECTION")
 
 	mongoDriver := mongo.NewMongoDriver(dBName, collectionName)
 	h.reader = parser.NewBankReader()
@@ -116,6 +116,7 @@ func (h *HttpSuite) TestFileUpload() {
 		path:         "../test/test_files/bank_sample.csv",
 		expectedCode: http.StatusOK,
 		csvKey:       h.bankerHandler.CSVKey,
+		testName:     "test:upload:correct",
 	}
 	tests = append(tests, correctTest)
 
@@ -123,6 +124,7 @@ func (h *HttpSuite) TestFileUpload() {
 		path:         "../test/test_files/invalid_bank_sample.csv",
 		expectedCode: http.StatusBadRequest,
 		csvKey:       h.bankerHandler.CSVKey,
+		testName:     "test:upload:invalid_file",
 	}
 	tests = append(tests, invalidFileTest)
 
@@ -130,8 +132,16 @@ func (h *HttpSuite) TestFileUpload() {
 		path:         "../test/test_files/invalid_bank_sample.csv",
 		expectedCode: http.StatusBadRequest,
 		csvKey:       "invalid",
+		testName:     "test:upload:invalid_csv",
 	}
 	tests = append(tests, invalidCSVTest)
+
+	duplicateTest := &TestData{
+		path:         "../test/test_files/bank_sample.csv",
+		expectedCode: http.StatusNotModified,
+		csvKey:       h.bankerHandler.CSVKey,
+	}
+	tests = append(tests, duplicateTest)
 
 	h.doFileUploadTest(tests)
 }

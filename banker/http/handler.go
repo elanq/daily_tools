@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -33,8 +34,11 @@ func NewHandler(reader *parser.BankReader, driver *mongo.MongoDriver) *Handler {
 }
 
 //Insert content to db
-//TODO: use InsertAll if possible
 func (h *Handler) saveContent(bankContents []*model.BankContent) error {
+	if h.checkContent(bankContents[0]) {
+		return errors.New("Transactions already exists")
+	}
+
 	for _, content := range bankContents {
 		err := h.MongoDriver.Insert(content)
 		if err != nil {
@@ -171,4 +175,24 @@ func (h *Handler) fetchContent(minTime time.Time, maxTime time.Time, results *[]
 	}
 
 	return h.MongoDriver.Find(query, results)
+}
+
+func (h *Handler) checkContent(firstRow *model.BankContent) bool {
+	if firstRow == nil {
+		return false
+	}
+
+	var results []model.BankContent
+
+	query := bson.M{
+		"date": bson.M{
+			"$gte": firstRow.Date,
+		},
+	}
+
+	h.MongoDriver.Find(query, &results)
+	if len(results) > 0 {
+		return true
+	}
+	return false
 }
