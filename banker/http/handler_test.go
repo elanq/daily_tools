@@ -204,6 +204,13 @@ func (h *HttpSuite) TestReport() {
 	}
 	tests = append(tests, monthlyDataNotFoundTest)
 
+	summaryTypeTest := &TestData{
+		url:          "http://localhost:12345/banker/report/daily?month=10&year=17&type=summary",
+		expectedCode: http.StatusOK,
+		testName:     "test:monthly:summary_type",
+	}
+	tests = append(tests, summaryTypeTest)
+
 	h.doReportTest(tests)
 }
 

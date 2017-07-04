@@ -13,6 +13,7 @@ import (
 	"github.com/elanq/daily_tools/banker/model"
 	"github.com/elanq/daily_tools/banker/mongo"
 	"github.com/elanq/daily_tools/banker/parser"
+	"github.com/elanq/daily_tools/banker/utility"
 )
 
 //Handler type. used to reference csv reader, csv key, year key and mongodriver
@@ -96,6 +97,8 @@ func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) DailyReport(w http.ResponseWriter, r *http.Request) {
 	month := r.URL.Query().Get("month")
 	year := r.URL.Query().Get("year")
+	content := r.URL.Query().Get("type")
+
 	var results []model.BankContent
 
 	if month == "" || year == "" {
@@ -121,6 +124,13 @@ func (h *Handler) DailyReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+
+	if content == "summary" {
+		summary := utility.MonthlySummary(results)
+		json.NewEncoder(w).Encode(summary)
+		return
+	}
+
 	json.NewEncoder(w).Encode(results)
 }
 
