@@ -4,7 +4,7 @@ import (
 	"github.com/elanq/daily_tools/banker/model"
 )
 
-func MonthlySummary(contents []model.BankContent) *model.Summary {
+func GenerateSummary(contents []model.BankContent) *model.Summary {
 	income := 0
 	outcome := 0
 	summary := &model.Summary{}

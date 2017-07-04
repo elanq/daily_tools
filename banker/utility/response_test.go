@@ -9,14 +9,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMonthlySummary(t *testing.T) {
+func TestGenerateSummary(t *testing.T) {
 	var contents []model.BankContent
 
-	emptySummary := utility.MonthlySummary(contents)
+	emptySummary := utility.GenerateSummary(contents)
 	assert.NotNil(t, emptySummary, "should never return nil")
 
 	fillData(&contents)
-	summary := utility.MonthlySummary(contents)
+	summary := utility.GenerateSummary(contents)
 	assert.NotNil(t, summary, "should not return nil")
 }
 

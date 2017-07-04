@@ -25,14 +25,19 @@ param :
   - rahasianegara (required) : file to be uploaded, must be formatted as CSV
 
 ```
-  GET   /banker/report/daily
+  GET   /banker/report/monthly
 ```
 param :
   - month (required) : month of transaction. formatted in MM
   - year (required) : year of transaction. formatted in YY
+  - type (optional) : specify return type of data, default is raw json per transaction
+    - summary : will return summary of transaction
 
 ```
-  GET /banker/report/monthly
+  GET /banker/report/yearly
 ```
 param :
   - year (required) : year of transaction. formatted in YY
+  - type (optional) : specify return type of data, default is raw json per transaction
+    - summary : will return summary of transaction
+

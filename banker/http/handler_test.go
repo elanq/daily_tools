@@ -47,8 +47,8 @@ func TestHttpSuite(t *testing.T) {
 func (h *HttpSuite) initHTTP() {
 	router := chi.NewRouter()
 	router.Post("/banker/upload", h.bankerHandler.FileUpload)
-	router.Get("/banker/report/daily", h.bankerHandler.DailyReport)
 	router.Get("/banker/report/monthly", h.bankerHandler.MonthlyReport)
+	router.Get("/banker/report/yearly", h.bankerHandler.YearlyReport)
 	h.banker.Router = router
 }
 
@@ -162,29 +162,8 @@ func (h *HttpSuite) doFileUploadTest(tests []*TestData) {
 
 func (h *HttpSuite) TestReport() {
 	var tests []*TestData
-	dailyCorrectTest := &TestData{
-		url:          "http://localhost:12345/banker/report/daily?month=10&year=17",
-		expectedCode: http.StatusOK,
-		testName:     "test:daily:success",
-	}
-	tests = append(tests, dailyCorrectTest)
-
-	dailyParamNotSpecifiedTest := &TestData{
-		url:          "http://localhost:12345/banker/report/daily",
-		expectedCode: http.StatusBadRequest,
-		testName:     "test:daily:unspecified_param",
-	}
-	tests = append(tests, dailyParamNotSpecifiedTest)
-
-	dailyDataNotFoundTest := &TestData{
-		url:          "http://localhost:12345/banker/report/daily?month=1&year=10",
-		expectedCode: http.StatusNotFound,
-		testName:     "test:daily:data_not_found",
-	}
-	tests = append(tests, dailyDataNotFoundTest)
-
 	monthlyCorrectTest := &TestData{
-		url:          "http://localhost:12345/banker/report/monthly?year=17",
+		url:          "http://localhost:12345/banker/report/monthly?month=10&year=17",
 		expectedCode: http.StatusOK,
 		testName:     "test:monthly:success",
 	}
@@ -198,18 +177,46 @@ func (h *HttpSuite) TestReport() {
 	tests = append(tests, monthlyParamNotSpecifiedTest)
 
 	monthlyDataNotFoundTest := &TestData{
-		url:          "http://localhost:12345/banker/report/monthly?year=10",
+		url:          "http://localhost:12345/banker/report/monthly?month=1&year=10",
 		expectedCode: http.StatusNotFound,
 		testName:     "test:monthly:data_not_found",
 	}
 	tests = append(tests, monthlyDataNotFoundTest)
 
+	yearlyCorrectTest := &TestData{
+		url:          "http://localhost:12345/banker/report/yearly?year=17",
+		expectedCode: http.StatusOK,
+		testName:     "test:yearly:success",
+	}
+	tests = append(tests, yearlyCorrectTest)
+
+	yearlyParamNotSpecifiedTest := &TestData{
+		url:          "http://localhost:12345/banker/report/yearly",
+		expectedCode: http.StatusBadRequest,
+		testName:     "test:yearly:unspecified_param",
+	}
+	tests = append(tests, yearlyParamNotSpecifiedTest)
+
+	yearlyDataNotFoundTest := &TestData{
+		url:          "http://localhost:12345/banker/report/yearly?year=10",
+		expectedCode: http.StatusNotFound,
+		testName:     "test:yearly:data_not_found",
+	}
+	tests = append(tests, yearlyDataNotFoundTest)
+
 	summaryTypeTest := &TestData{
-		url:          "http://localhost:12345/banker/report/daily?month=10&year=17&type=summary",
+		url:          "http://localhost:12345/banker/report/monthly?month=10&year=17&type=summary",
 		expectedCode: http.StatusOK,
 		testName:     "test:monthly:summary_type",
 	}
 	tests = append(tests, summaryTypeTest)
+
+	summaryTypeYearlyTest := &TestData{
+		url:          "http://localhost:12345/banker/report/yearly?year=17&type=summary",
+		expectedCode: http.StatusOK,
+		testName:     "test:yearly:summary_type",
+	}
+	tests = append(tests, summaryTypeYearlyTest)
 
 	h.doReportTest(tests)
 }
