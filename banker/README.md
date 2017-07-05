@@ -1,17 +1,25 @@
 # Banker
 
-Banker is stupidly go-based tool to save and track personal bank account data. Banker will provide brief information about your financial information by using Telegram Bot API to send it right away to your favorite messager app.
+Banker is stupidly go-based tool to save and track personal bank account data. Banker will provide brief information about your financial information by using REST API to send it right away to your favorite app.
+
+# Supported features
+
+- Receive bank mutation data from klikbca in CSV format
+- Parse csv data and save them to mongodb
+- Provide endpoints to serve transactions data and return into different type (raw and summary)
 
 # Todo
 
 - ~~Create CSV parser~~
 - ~~Create REST API to accept csv data~~
-- Init Telegram BOT to track my data directly to phone
+- Provide support to return transaction data as chart
+- Multiple bank support
 
 # Caveats
 
 - Only supports BCA Klikpay mutation csv format
 - Should export csv file manually
+- This intended to only support one bank account at a time. So multiple user support is not considered as the part of development
 
 # Disclaimer
 
@@ -23,6 +31,7 @@ These projects under daily_tool are experimental. It's only intended to make my 
 ```
 param :
   - rahasianegara (required) : file to be uploaded, must be formatted as CSV
+
   - year (required) : year of transaction. formatted in YY
 
 ```
