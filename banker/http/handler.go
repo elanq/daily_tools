@@ -13,6 +13,7 @@ import (
 	"github.com/elanq/daily_tools/banker/model"
 	"github.com/elanq/daily_tools/banker/mongo"
 	"github.com/elanq/daily_tools/banker/parser"
+	"github.com/elanq/daily_tools/banker/utility"
 )
 
 //Handler type. used to reference csv reader, csv key, year key and mongodriver
@@ -62,7 +63,7 @@ func (h *Handler) saveContent(bankContents []*model.BankContent) error {
 
 //provide transaction data per day by given year
 // TODO: need to aggregate into monthly data tho
-func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) YearlyReport(w http.ResponseWriter, r *http.Request) {
 	year := r.URL.Query().Get("year")
 	var results []model.BankContent
 
@@ -89,13 +90,19 @@ func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+
+	if returnSummary(&w, r, &results) {
+		return
+	}
+
 	json.NewEncoder(w).Encode(results)
 }
 
 //provide transaction data per day by given month
-func (h *Handler) DailyReport(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) MonthlyReport(w http.ResponseWriter, r *http.Request) {
 	month := r.URL.Query().Get("month")
 	year := r.URL.Query().Get("year")
+
 	var results []model.BankContent
 
 	if month == "" || year == "" {
@@ -121,7 +128,23 @@ func (h *Handler) DailyReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+
+	if returnSummary(&w, r, &results) {
+		return
+	}
+
 	json.NewEncoder(w).Encode(results)
+}
+
+func returnSummary(w *http.ResponseWriter, r *http.Request, results *[]model.BankContent) bool {
+	contentType := r.URL.Query().Get("type")
+	if contentType != "summary" {
+		return false
+	}
+	summary := utility.GenerateSummary(*results)
+	json.NewEncoder(*w).Encode(summary)
+
+	return true
 }
 
 func (h *Handler) FileUpload(w http.ResponseWriter, r *http.Request) {

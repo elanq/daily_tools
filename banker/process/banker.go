@@ -47,8 +47,8 @@ func setRouter(bankerHandler *bankerhttp.Handler) http.Handler {
 	router.Use(middleware.Timeout(60 * time.Second))
 
 	router.Post("/banker/upload", bankerHandler.FileUpload)
-	router.Get("/banker/report/daily", bankerHandler.DailyReport)
 	router.Get("/banker/report/monthly", bankerHandler.MonthlyReport)
+	router.Get("/banker/report/yearly", bankerHandler.YearlyReport)
 	// TODO
 	// monthly report endpoint should be only naratively describes current financial status
 	// make new endpoint to generate fancy charts for your financial data

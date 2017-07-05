@@ -1,7 +1,6 @@
 package utility_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -10,15 +9,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPrintSummaryType(t *testing.T) {
+func TestGenerateSummary(t *testing.T) {
 	var contents []model.BankContent
 
-	response := utility.PrintSummaryType(contents)
-	assert.Equal(t, "No data available", response, "should return same value")
+	emptySummary := utility.GenerateSummary(contents)
+	assert.NotNil(t, emptySummary, "should never return nil")
+
 	fillData(&contents)
-	validResponse := utility.PrintSummaryType(contents)
-	fmt.Println(validResponse)
-	assert.NotEqual(t, "", validResponse, "should return summary")
+	summary := utility.GenerateSummary(contents)
+	assert.NotNil(t, summary, "should not return nil")
 }
 
 func fillData(contents *[]model.BankContent) {
