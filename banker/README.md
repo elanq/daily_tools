@@ -23,6 +23,7 @@ These projects under daily_tool are experimental. It's only intended to make my 
 ```
 param :
   - rahasianegara (required) : file to be uploaded, must be formatted as CSV
+  - year (required) : year of transaction. formatted in YY
 
 ```
   GET   /banker/report/monthly
