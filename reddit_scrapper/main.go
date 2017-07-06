@@ -17,7 +17,6 @@ var client *http.Client
 func main() {
 	loadConfig()
 	access_token := getAccessToken()
-	fmt.Println(access_token)
 }
 
 func loadConfig() {
@@ -69,7 +68,6 @@ func getAccessToken() string {
 	}
 
 	return rawMap["access_token"].(string)
-
 }
 
 func printPersonalInfo() {
