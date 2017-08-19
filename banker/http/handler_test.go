@@ -15,9 +15,9 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
+	"github.com/elanq/daily_tools/banker/db"
 	banker "github.com/elanq/daily_tools/banker/http"
 	"github.com/elanq/daily_tools/banker/model"
-	"github.com/elanq/daily_tools/banker/mongo"
 	"github.com/elanq/daily_tools/banker/parser"
 	"github.com/elanq/daily_tools/banker/process"
 	"github.com/pressly/chi"
@@ -57,7 +57,7 @@ func (h *HttpSuite) SetupSuite() {
 	dBName := os.Getenv("DB_NAME")
 	collectionName := os.Getenv("DB_COLLECTION")
 
-	mongoDriver := mongo.NewMongoDriver(dBName, collectionName)
+	mongoDriver := db.NewMongoDriver(dBName, collectionName)
 	h.reader = parser.NewBankReader()
 	h.bankerHandler = banker.NewHandler(h.reader, mongoDriver)
 	h.banker = process.NewBanker()

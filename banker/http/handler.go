@@ -10,8 +10,8 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
+	"github.com/elanq/daily_tools/banker/db"
 	"github.com/elanq/daily_tools/banker/model"
-	"github.com/elanq/daily_tools/banker/mongo"
 	"github.com/elanq/daily_tools/banker/parser"
 	"github.com/elanq/daily_tools/banker/utility"
 )
@@ -21,11 +21,11 @@ type Handler struct {
 	Reader      *parser.BankReader
 	CSVKey      string
 	YearKey     string
-	MongoDriver *mongo.MongoDriver
+	MongoDriver *db.MongoDriver
 }
 
 //create new type of request handler
-func NewHandler(reader *parser.BankReader, driver *mongo.MongoDriver) *Handler {
+func NewHandler(reader *parser.BankReader, driver *db.MongoDriver) *Handler {
 	return &Handler{
 		Reader:      reader,
 		MongoDriver: driver,

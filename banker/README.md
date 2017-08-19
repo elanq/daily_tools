@@ -7,6 +7,7 @@ Banker is stupidly go-based tool to save and track personal bank account data. B
 - Receive bank mutation data from klikbca in CSV format
 - Parse csv data and save them to mongodb
 - Provide endpoints to serve transactions data and return into different type (raw and summary)
+- Real time google sheet backup
 
 # Todo
 

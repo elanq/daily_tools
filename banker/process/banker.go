@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/elanq/daily_tools/banker/db"
 	bankerhttp "github.com/elanq/daily_tools/banker/http"
-	"github.com/elanq/daily_tools/banker/mongo"
 	"github.com/elanq/daily_tools/banker/parser"
 	"github.com/pressly/chi"
 	"github.com/pressly/chi/middleware"
@@ -15,7 +15,7 @@ import (
 type Banker struct {
 	BankerHandler *bankerhttp.Handler
 	Reader        *parser.BankReader
-	MongoDriver   *mongo.MongoDriver
+	MongoDriver   *db.MongoDriver
 	Router        http.Handler
 }
 
@@ -25,7 +25,7 @@ func NewBanker() *Banker {
 	dbName := os.Getenv("DB_NAME")
 	collectionName := "collection_banker"
 	reader := parser.NewBankReader()
-	mongoDriver := mongo.NewMongoDriver(dbName, collectionName)
+	mongoDriver := db.NewMongoDriver(dbName, collectionName)
 	bankerHandler := bankerhttp.NewHandler(reader, mongoDriver)
 
 	return &Banker{
