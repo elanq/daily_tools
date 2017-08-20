@@ -4,3 +4,5 @@
 debug
 *vim-go-test-compile
 banker
+vendor/**/
+
