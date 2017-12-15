@@ -1,6 +1,7 @@
 *debug
 .env
 *.swp
+credential.json
 debug
 *vim-go-test-compile
 banker

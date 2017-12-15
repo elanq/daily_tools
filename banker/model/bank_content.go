@@ -1,11 +1,13 @@
 package model
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"strconv"
 	"time"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
+// BankContent encapsulates required bank record content
 type BankContent struct {
 	ID      bson.ObjectId `bson:"_id,omitempty" json:"_id,omitempty"`
 	Date    time.Time     `bson:"date" json:"date"`
@@ -16,6 +18,7 @@ type BankContent struct {
 	Balance int           `bson:"balance" json:"balance"`
 }
 
+//SheetHeader is array of string that represent the title for each column
 func SheetHeader() []interface{} {
 	return []interface{}{
 		"ID",
@@ -28,6 +31,7 @@ func SheetHeader() []interface{} {
 	}
 }
 
+//SheetContent returns the value of BankContent object
 func (b *BankContent) SheetContent() []interface{} {
 	return []interface{}{
 		b.ID.String(),
@@ -36,6 +40,6 @@ func (b *BankContent) SheetContent() []interface{} {
 		b.Branch,
 		strconv.Itoa(b.Amount),
 		strconv.Itoa(b.Factor),
-		strconv.Itoa(b.Amount),
+		strconv.Itoa(b.Balance),
 	}
 }
