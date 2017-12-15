@@ -56,15 +56,23 @@ func (s *SheetDriver) Write(updateRange string, contents [][]interface{}) (*shee
 	return response, err
 }
 
-func (s *SheetDriver) Read() ([]*sheets.Sheet, error) {
-	sheets, err := s.sheetService.Spreadsheets.Get(s.sheetID).
-		Context(s.ctx).
-		Do()
+func (s *SheetDriver) Read(updateRange string) (*sheets.ValueRange, error) {
+	values, err := s.sheetService.Spreadsheets.Values.Get(s.sheetID, updateRange).Context(s.ctx).Do()
 	if err != nil {
 		return nil, err
 	}
 
-	return sheets.Sheets, nil
+	return values, nil
+}
+
+func (s *SheetDriver) BatchRead() ([]*sheets.ValueRange, error) {
+	ranges := []string{"A:Z"}
+	values, err := s.sheetService.Spreadsheets.Values.BatchGet(s.sheetID).Ranges(ranges...).Context(s.ctx).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return values.ValueRanges, err
 }
 
 func exportCredential() (string, error) {

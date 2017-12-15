@@ -3,13 +3,13 @@ package db_test
 import (
 	"context"
 	"log"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/elanq/daily_tools/banker/db"
 	"github.com/elanq/daily_tools/banker/model"
 	"github.com/subosito/gotenv"
-	"google.golang.org/api/sheets/v4"
 )
 
 var (
@@ -38,6 +38,7 @@ func TestSheet(t *testing.T) {
 
 	t.Run("test write", testWrite)
 	t.Run("test read", testRead)
+	t.Run("test batch read", testBatchRead)
 }
 
 func testWrite(t *testing.T) {
@@ -60,33 +61,81 @@ func testWrite(t *testing.T) {
 }
 
 func testRead(t *testing.T) {
-	sheets, err := sDriver.Read()
+	values, err := sDriver.Read("TestSheet!A1:G2")
 	if err != nil {
 		log.Println(err)
 		t.FailNow()
 	}
 
-	for _, s := range sheets {
-		if s.Properties.Title == "TestSheet" {
-			traverse(s.Data)
+	if values.HTTPStatusCode != 200 {
+		log.Printf("invalid response from sheet API, expected 200 got %d", values.HTTPStatusCode)
+		t.FailNow()
+	}
+
+	if size := len(values.Values); size < 1 {
+		log.Printf("expect record size bigger than 1. got %d", size)
+		t.FailNow()
+	}
+
+	contents := []model.BankContent{}
+	for idx, row := range values.Values {
+		//skip header
+		if idx == 0 {
+			continue
+		}
+		assignContent(&contents, row)
+	}
+
+	if size := len(contents); size < 1 {
+		log.Printf("expect record size bigger than 1. got %d", size)
+		t.FailNow()
+	}
+}
+
+func testBatchRead(t *testing.T) {
+	values, err := sDriver.BatchRead()
+	if err != nil {
+		log.Println(err)
+		t.FailNow()
+	}
+
+	if size := len(values); size < 1 {
+		log.Printf("expect record size bigger than 1. got %d", size)
+	}
+
+	contents := []model.BankContent{}
+	for _, resp := range values {
+		for idx, row := range resp.Values {
+			//skip header
+			if idx == 0 {
+				continue
+			}
+			assignContent(&contents, row)
 		}
 	}
-}
 
-func traverse(grid []*sheets.GridData) {
-	for _, sData := range grid {
-		traverseRow(sData.RowData)
+	if size := len(contents); size < 1 {
+		log.Printf("expect record size bigger than 1. got %d", size)
+		t.FailNow()
 	}
 }
 
-func traverseRow(rows []*sheets.RowData) {
-	for _, rData := range rows {
-		traverseCell(rData.Values)
-	}
+func assignContent(contents *[]model.BankContent, row []interface{}) {
+	content := model.BankContent{}
+
+	content.Notes = row[2].(string)
+	content.Branch = row[3].(string)
+	content.Amount = parseNumber(row[4].(string))
+	content.Factor = parseNumber(row[5].(string))
+	content.Balance = parseNumber(row[6].(string))
+
+	*contents = append(*contents, content)
 }
 
-func traverseCell(cells []*sheets.CellData) {
-	for _, cData := range cells {
-		log.Println(cData.FormattedValue)
+func parseNumber(value string) int {
+	val, err := strconv.Atoi(value)
+	if err != nil {
+		return 0
 	}
+	return val
 }
