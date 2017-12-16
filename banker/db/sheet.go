@@ -15,7 +15,6 @@ const (
 )
 
 type SheetDriver struct {
-	ctx          context.Context
 	sheetService *sheets.Service
 	sheetID      string
 }
@@ -38,17 +37,17 @@ func NewSheetDriver(ctx context.Context) (*SheetDriver, error) {
 
 	return &SheetDriver{
 		sheetService: sheetService,
-		ctx:          ctx,
 		sheetID:      sheetID,
 	}, nil
 }
 
-func (s *SheetDriver) Write(updateRange string, contents [][]interface{}) (*sheets.UpdateValuesResponse, error) {
+func (s *SheetDriver) Write(ctx context.Context, updateRange string, contents [][]interface{}) (*sheets.UpdateValuesResponse, error) {
 	request := &sheets.ValueRange{
 		Values: contents,
 	}
 	response, err := s.sheetService.Spreadsheets.Values.Update(s.sheetID, updateRange, request).
 		ValueInputOption(SheetsDefaultValueOption).
+		Context(ctx).
 		Do()
 	if err != nil {
 		return response, err
@@ -56,8 +55,8 @@ func (s *SheetDriver) Write(updateRange string, contents [][]interface{}) (*shee
 	return response, err
 }
 
-func (s *SheetDriver) Read(updateRange string) (*sheets.ValueRange, error) {
-	values, err := s.sheetService.Spreadsheets.Values.Get(s.sheetID, updateRange).Context(s.ctx).Do()
+func (s *SheetDriver) Read(ctx context.Context, updateRange string) (*sheets.ValueRange, error) {
+	values, err := s.sheetService.Spreadsheets.Values.Get(s.sheetID, updateRange).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -65,9 +64,9 @@ func (s *SheetDriver) Read(updateRange string) (*sheets.ValueRange, error) {
 	return values, nil
 }
 
-func (s *SheetDriver) BatchRead() ([]*sheets.ValueRange, error) {
+func (s *SheetDriver) BatchRead(ctx context.Context) ([]*sheets.ValueRange, error) {
 	ranges := []string{"A:Z"}
-	values, err := s.sheetService.Spreadsheets.Values.BatchGet(s.sheetID).Ranges(ranges...).Context(s.ctx).Do()
+	values, err := s.sheetService.Spreadsheets.Values.BatchGet(s.sheetID).Ranges(ranges...).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}

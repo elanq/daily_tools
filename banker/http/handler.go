@@ -34,13 +34,15 @@ type Handler struct {
 	CSVKey      string
 	YearKey     string
 	MongoDriver *db.MongoDriver
+	SheetDriver *db.SheetDriver
 }
 
 //create new type of request handler
-func NewHandler(reader *parser.BankReader, driver *db.MongoDriver) *Handler {
+func NewHandler(reader *parser.BankReader, driver *db.MongoDriver, sheetDriver *sheetDriver) *Handler {
 	return &Handler{
 		Reader:      reader,
 		MongoDriver: driver,
+		SheetDriver: sheetDriver,
 		CSVKey:      os.Getenv("MULTIPART_CSV_KEY"),
 		YearKey:     "year",
 	}

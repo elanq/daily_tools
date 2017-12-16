@@ -26,12 +26,17 @@ func NewBanker() *Banker {
 	collectionName := "collection_banker"
 	reader := parser.NewBankReader()
 	mongoDriver := db.NewMongoDriver(dbName, collectionName)
+	sheetDriver, err := db.NewSheetDriver()
+	if err != nil {
+		panic(err)
+	}
 	bankerHandler := bankerhttp.NewHandler(reader, mongoDriver)
 
 	return &Banker{
 		BankerHandler: bankerHandler,
 		Reader:        reader,
 		MongoDriver:   mongoDriver,
+		SheetDriver:   sheetDriver,
 		Router:        setRouter(bankerHandler),
 	}
 }
@@ -47,12 +52,13 @@ func setRouter(bankerHandler *bankerhttp.Handler) http.Handler {
 	router.Use(middleware.Timeout(60 * time.Second))
 
 	router.Post("/banker/upload", bankerHandler.FileUpload)
+	router.Post("/banker/report/backup", func() {})
 	router.Get("/banker/report/monthly", bankerHandler.MonthlyReport)
 	router.Get("/banker/report/yearly", bankerHandler.YearlyReport)
 	// TODO
 	// monthly report endpoint should be only naratively describes current financial status
 	// make new endpoint to generate fancy charts for your financial data
-	// if possible, CSV upload is should be scheduled properly
+	// if possible, CSV upload could be scheduled properly
 
 	return router
 }

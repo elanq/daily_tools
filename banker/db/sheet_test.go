@@ -42,13 +42,14 @@ func TestSheet(t *testing.T) {
 }
 
 func testWrite(t *testing.T) {
+	ctx := context.TODO()
 	updateRange := "TestSheet!A1:G2"
 	valueRange := [][]interface{}{
 		model.SheetHeader(),
 		bankContent.SheetContent(),
 	}
 
-	resp, err := sDriver.Write(updateRange, valueRange)
+	resp, err := sDriver.Write(ctx, updateRange, valueRange)
 	if err != nil {
 		log.Println(err)
 		t.FailNow()
@@ -61,7 +62,8 @@ func testWrite(t *testing.T) {
 }
 
 func testRead(t *testing.T) {
-	values, err := sDriver.Read("TestSheet!A1:G2")
+	ctx := context.TODO()
+	values, err := sDriver.Read(ctx, "TestSheet!A1:G2")
 	if err != nil {
 		log.Println(err)
 		t.FailNow()
@@ -93,7 +95,8 @@ func testRead(t *testing.T) {
 }
 
 func testBatchRead(t *testing.T) {
-	values, err := sDriver.BatchRead()
+	ctx := context.TODO()
+	values, err := sDriver.BatchRead(ctx)
 	if err != nil {
 		log.Println(err)
 		t.FailNow()
