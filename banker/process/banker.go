@@ -1,6 +1,7 @@
 package process
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"time"
@@ -20,17 +21,18 @@ type Banker struct {
 }
 
 // Initiate Banker struct
-// thist struct reference needed dependencies
+// this struct reference needed dependencies
 func NewBanker() *Banker {
+	ctx := context.Background()
 	dbName := os.Getenv("DB_NAME")
 	collectionName := "collection_banker"
 	reader := parser.NewBankReader()
 	mongoDriver := db.NewMongoDriver(dbName, collectionName)
-	sheetDriver, err := db.NewSheetDriver()
+	sheetDriver, err := db.NewSheetDriver(ctx)
 	if err != nil {
 		panic(err)
 	}
-	bankerHandler := bankerhttp.NewHandler(reader, mongoDriver)
+	bankerHandler := bankerhttp.NewHandler(reader, mongoDriver, sheetDriver)
 
 	return &Banker{
 		BankerHandler: bankerHandler,
@@ -52,7 +54,7 @@ func setRouter(bankerHandler *bankerhttp.Handler) http.Handler {
 	router.Use(middleware.Timeout(60 * time.Second))
 
 	router.Post("/banker/upload", bankerHandler.FileUpload)
-	router.Post("/banker/report/backup", func() {})
+	router.Post("/banker/report/backup", bankerHandler.Backup)
 	router.Get("/banker/report/monthly", bankerHandler.MonthlyReport)
 	router.Get("/banker/report/yearly", bankerHandler.YearlyReport)
 	// TODO

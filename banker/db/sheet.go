@@ -41,6 +41,64 @@ func NewSheetDriver(ctx context.Context) (*SheetDriver, error) {
 	}, nil
 }
 
+func (s *SheetDriver) Backup(ctx context.Context, sheetName string, contents [][]interface{}) (int64, error) {
+	var sheetID int64
+	updateRange := sheetName + "!A:Z"
+
+	resp, err := s.CreateSheet(ctx, sheetName)
+	if err != nil {
+		return 0, err
+	}
+
+	for _, rep := range resp.Replies {
+		//assume replies only contains 1 entity
+		sheetID = rep.AddSheet.Properties.SheetId
+		break
+	}
+
+	if _, err := s.Write(ctx, updateRange, contents); err != nil {
+		return 0, err
+	}
+
+	return sheetID, nil
+}
+
+func (s *SheetDriver) DeleteSheet(ctx context.Context, sheetID int64) (*sheets.BatchUpdateSpreadsheetResponse, error) {
+	deleteRequest := &sheets.Request{
+		DeleteSheet: &sheets.DeleteSheetRequest{
+			SheetId: sheetID,
+		},
+	}
+
+	batchUpdateRequest := &sheets.BatchUpdateSpreadsheetRequest{
+		Requests: []*sheets.Request{deleteRequest},
+	}
+
+	resp, err := s.sheetService.Spreadsheets.BatchUpdate(s.sheetID, batchUpdateRequest).Context(ctx).Do()
+
+	return resp, err
+}
+
+func (s *SheetDriver) CreateSheet(ctx context.Context, sheetName string) (*sheets.BatchUpdateSpreadsheetResponse, error) {
+	addRequest := &sheets.AddSheetRequest{
+		Properties: &sheets.SheetProperties{
+			Title: sheetName,
+		},
+	}
+
+	request := &sheets.Request{
+		AddSheet: addRequest,
+	}
+
+	batchUpdateRequest := &sheets.BatchUpdateSpreadsheetRequest{
+		Requests: []*sheets.Request{request},
+	}
+
+	res, err := s.sheetService.Spreadsheets.BatchUpdate(s.sheetID, batchUpdateRequest).Context(ctx).Do()
+
+	return res, err
+}
+
 func (s *SheetDriver) Write(ctx context.Context, updateRange string, contents [][]interface{}) (*sheets.UpdateValuesResponse, error) {
 	request := &sheets.ValueRange{
 		Values: contents,

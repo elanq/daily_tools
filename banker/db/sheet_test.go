@@ -20,11 +20,14 @@ var (
 func TestSheet(t *testing.T) {
 	gotenv.Load("../.env")
 	ctx := context.TODO()
+
 	driver, err := db.NewSheetDriver(ctx)
 	if err != nil {
 		log.Println(err)
 		t.FailNow()
 	}
+
+	//driver and content setup
 	sDriver = driver
 	bankContent = &model.BankContent{
 		ID:      "1",
@@ -39,6 +42,8 @@ func TestSheet(t *testing.T) {
 	t.Run("test write", testWrite)
 	t.Run("test read", testRead)
 	t.Run("test batch read", testBatchRead)
+	t.Run("test sheet creation", testCreate)
+	t.Run("test backup", testBackup)
 }
 
 func testWrite(t *testing.T) {
@@ -104,6 +109,7 @@ func testBatchRead(t *testing.T) {
 
 	if size := len(values); size < 1 {
 		log.Printf("expect record size bigger than 1. got %d", size)
+		t.FailNow()
 	}
 
 	contents := []model.BankContent{}
@@ -121,6 +127,76 @@ func testBatchRead(t *testing.T) {
 		log.Printf("expect record size bigger than 1. got %d", size)
 		t.FailNow()
 	}
+}
+
+func testBackup(t *testing.T) {
+	ctx := context.TODO()
+	valueRange := [][]interface{}{
+		model.SheetHeader(),
+		bankContent.SheetContent(),
+	}
+	sheetName := "testBackupSheet"
+
+	sheetID, err := sDriver.Backup(ctx, sheetName, valueRange)
+
+	if err != nil {
+		log.Println(err)
+		t.FailNow()
+	}
+
+	if sheetID == 0 {
+		log.Println("sheet ID is 0")
+		t.FailNow()
+	}
+
+	if err = sheetCleanup(ctx, sheetID); err != nil {
+		log.Println(err)
+		t.FailNow()
+	}
+}
+
+func testCreate(t *testing.T) {
+	var createdSheetID int64
+	ctx := context.TODO()
+	sheetName := "testBackupSheet"
+
+	res, err := sDriver.CreateSheet(ctx, sheetName)
+	if err != nil {
+		log.Println(err)
+		t.FailNow()
+	}
+
+	if res.HTTPStatusCode != 200 {
+		log.Println(err)
+		t.FailNow()
+	}
+
+	for _, rep := range res.Replies {
+		createdSheetID = rep.AddSheet.Properties.SheetId
+		//assume replies only contains 1 value
+		break
+	}
+
+	if createdSheetID == 0 {
+		log.Println("failed to get created sheet ID")
+		log.Println(res)
+		t.FailNow()
+	}
+
+	if err = sheetCleanup(ctx, createdSheetID); err != nil {
+		log.Println(err)
+		t.FailNow()
+	}
+}
+
+func sheetCleanup(ctx context.Context, sheetID int64) error {
+	//delete newly created sheet
+	_, err := sDriver.DeleteSheet(ctx, sheetID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func assignContent(contents *[]model.BankContent, row []interface{}) {

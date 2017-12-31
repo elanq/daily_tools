@@ -63,6 +63,13 @@ func (h *Handler) saveContent(bankContents []*model.BankContent) error {
 	return nil
 }
 
+//Backup all recorded records to google sheet
+func (h *Handler) Backup(w http.ResponseWriter, r *http.Request) {
+	year := r.URL.Query().Get("year")
+
+	ctx := r.Context()
+}
+
 //TODO
 //1. Handle daily report as charts
 //2. Generate brief summary with information like
