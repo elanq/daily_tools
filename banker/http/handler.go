@@ -116,7 +116,6 @@ func (h *Handler) Backup(w http.ResponseWriter, r *http.Request) {
 			currentTime = result.Date
 			low = idx
 		}
-
 	}
 
 	err = h.doBackup(ctx, pointers, resultsBuffer)
@@ -124,29 +123,6 @@ func (h *Handler) Backup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	//	for idx, result := range results {
-	//		if result.Date.Month() == currentTime.Month() {
-	//			resultBuffer = append(resultBuffer, result)
-	//			continue
-	//		} else {
-	//			// do backup
-	//			sheetID, err := h.doBackup(ctx, currentTime, &resultBuffer)
-	//			if err != nil {
-	//				http.Error(w, err.Error(), http.StatusInternalServerError)
-	//				h.doSheetCleanup(ctx, createdSheetID)
-	//				return
-	//			}
-	//			// append successful sheetID. these sheet IDs would be deleted when backup operation is failed
-	//			createdSheetID = append(createdSheetID, sheetID)
-	//			// clear the buffer
-	//			resultBuffer = nil
-	//			resultBuffer = append(resultBuffer, result)
-	//			// set currenttime to current iteration
-	//			currentTime = result.Date
-	//		}
-	//
-	//	}
 
 	json.NewEncoder(w).Encode("ok")
 }
