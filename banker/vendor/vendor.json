@@ -1,0 +1,43 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "dr5+PfIRzXeN+l1VG+s0lea9qz8=",
+			"path": "golang.org/x/net/context",
+			"revision": "1c05540f6879653db88113bc4a2b70aec4bd491f",
+			"revisionTime": "2017-08-04T00:04:37Z"
+		},
+		{
+			"checksumSHA1": "WHc3uByvGaMcnSoI21fhzYgbOgg=",
+			"path": "golang.org/x/net/context/ctxhttp",
+			"revision": "1c05540f6879653db88113bc4a2b70aec4bd491f",
+			"revisionTime": "2017-08-04T00:04:37Z"
+		},
+		{
+			"checksumSHA1": "WEjuBZQrbJERSncK+GGSVXIPAhk=",
+			"path": "google.golang.org/api/gensupport",
+			"revision": "ed10e890a8366167a7ce33fac2b12447987bcb1c",
+			"revisionTime": "2017-08-17T17:08:30Z"
+		},
+		{
+			"checksumSHA1": "BWKmb7kGYbfbvXO6E7tCpTh9zKE=",
+			"path": "google.golang.org/api/googleapi",
+			"revision": "ed10e890a8366167a7ce33fac2b12447987bcb1c",
+			"revisionTime": "2017-08-17T17:08:30Z"
+		},
+		{
+			"checksumSHA1": "1K0JxrUfDqAB3MyRiU1LKjfHyf4=",
+			"path": "google.golang.org/api/googleapi/internal/uritemplates",
+			"revision": "ed10e890a8366167a7ce33fac2b12447987bcb1c",
+			"revisionTime": "2017-08-17T17:08:30Z"
+		},
+		{
+			"checksumSHA1": "xyqXA7kmXai0+loSnjb5v0sRTkI=",
+			"path": "google.golang.org/api/sheets/v4",
+			"revision": "ed10e890a8366167a7ce33fac2b12447987bcb1c",
+			"revisionTime": "2017-08-17T17:08:30Z"
+		}
+	],
+	"rootPath": "github.com/elanq/daily_tools/banker"
+}

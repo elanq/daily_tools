@@ -1,12 +1,12 @@
-package mongo_test
+package db_test
 
 import (
 	"os"
 	"testing"
 	"time"
 
+	"github.com/elanq/daily_tools/banker/db"
 	"github.com/elanq/daily_tools/banker/model"
-	"github.com/elanq/daily_tools/banker/mongo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/subosito/gotenv"
@@ -17,7 +17,7 @@ type DriverSuite struct {
 	suite.Suite
 	DBName         string
 	CollectionName string
-	Driver         *mongo.MongoDriver
+	Driver         *db.MongoDriver
 }
 
 func TestDriverSuite(t *testing.T) {
@@ -28,7 +28,7 @@ func (d *DriverSuite) SetupSuite() {
 	gotenv.Load("../env.sample")
 	d.DBName = os.Getenv("DB_NAME")
 	d.CollectionName = "banker_test_record"
-	d.Driver = mongo.NewMongoDriver(d.DBName, d.CollectionName)
+	d.Driver = db.NewMongoDriver(d.DBName, d.CollectionName)
 }
 
 func buildBankContent() *model.BankContent {
@@ -51,7 +51,7 @@ func (d *DriverSuite) TestNewMongoDriver() {
 func TestInvalidMongoDriver(t *testing.T) {
 	os.Setenv("MONGODB_HOSTS", "127.0.0.1:12345")
 	assert.Panics(t, func() {
-		mongo.NewMongoDriver("derp", "durpp")
+		db.NewMongoDriver("derp", "durpp")
 	}, "should be panic")
 }
 
