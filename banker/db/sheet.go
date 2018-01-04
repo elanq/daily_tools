@@ -63,6 +63,26 @@ func (s *SheetDriver) Backup(ctx context.Context, sheetName string, contents [][
 	return sheetID, nil
 }
 
+func (s *SheetDriver) BulkDeleteSheet(ctx context.Context, sheetIDs []int64) (*sheets.BatchUpdateSpreadsheetResponse, error) {
+	var requests []*sheets.Request
+	for _, sheetID := range sheetIDs {
+		request := &sheets.Request{
+			DeleteSheet: &sheets.DeleteSheetRequest{
+				SheetId: sheetID,
+			},
+		}
+		requests = append(requests, request)
+	}
+
+	batchUpdateRequest := &sheets.BatchUpdateSpreadsheetRequest{
+		Requests: requests,
+	}
+
+	resp, err := s.sheetService.Spreadsheets.BatchUpdate(s.sheetID, batchUpdateRequest).Context(ctx).Do()
+
+	return resp, err
+}
+
 func (s *SheetDriver) DeleteSheet(ctx context.Context, sheetID int64) (*sheets.BatchUpdateSpreadsheetResponse, error) {
 	deleteRequest := &sheets.Request{
 		DeleteSheet: &sheets.DeleteSheetRequest{

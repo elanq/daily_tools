@@ -17,6 +17,7 @@ type Banker struct {
 	BankerHandler *bankerhttp.Handler
 	Reader        *parser.BankReader
 	MongoDriver   *db.MongoDriver
+	SheetDriver   *db.SheetDriver
 	Router        http.Handler
 }
 
